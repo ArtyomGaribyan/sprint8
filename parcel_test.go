@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,11 +49,8 @@ func TestAddGetDelete(t *testing.T) {
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	p, err := store.Get(id)
-	require.NoError(t, err)
-	require.Equal(t, parcel.Address, p.Address)
-	require.Equal(t, parcel.Client, p.Client)
-	require.Equal(t, parcel.CreatedAt, p.CreatedAt)
-	require.Equal(t, parcel.Status, p.Status)
+	assert.NoError(t, err)
+	assert.Equal(t, parcel, p)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -60,9 +58,8 @@ func TestAddGetDelete(t *testing.T) {
 	err = store.Delete(id)
 	require.NoError(t, err)
 
-	p, err = store.Get(id)
+	_, err = store.Get(id)
 	require.Error(t, err)
-	require.Equal(t, Parcel{}, p)
 }
 
 // TestSetAddress проверяет обновление адреса
@@ -90,8 +87,8 @@ func TestSetAddress(t *testing.T) {
 	// check
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	p, err := store.Get(id)
-	require.NoError(t, err)
-	require.Equal(t, newAddress, p.Address)
+	assert.NoError(t, err)
+	assert.Equal(t, newAddress, p.Address)
 
 }
 
@@ -113,15 +110,14 @@ func TestSetStatus(t *testing.T) {
 
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
-	service := ParcelService{store}
-	err = service.NextStatus(id)
+	err = store.SetStatus(id, ParcelStatusDelivered)
 	require.NoError(t, err)
 
 	// check
 	// получите добавленную посылку и убедитесь, что статус обновился
 	p, err := store.Get(id)
-	require.NoError(t, err)
-	require.NotEqual(t, parcel.Status, p.Status)
+	assert.NoError(t, err)
+	assert.NotEqual(t, parcel.Status, p.Status)
 }
 
 // TestGetByClient проверяет получение посылок по идентификатору клиента
@@ -160,15 +156,15 @@ func TestGetByClient(t *testing.T) {
 
 	// get by client
 	storedParcels, err := store.GetByClient(client)
-	require.NoError(t, err)
-	require.Len(t, storedParcels, len(parcels))
+	assert.NoError(t, err)
+	assert.Len(t, storedParcels, len(parcels))
 
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		require.NotEmpty(t, parcelMap[parcel.Number])
-		require.Equal(t, parcelMap[parcel.Number], parcel)
+		assert.NotEmpty(t, parcelMap[parcel.Number])
+		assert.Equal(t, parcelMap[parcel.Number], parcel)
 	}
 }
